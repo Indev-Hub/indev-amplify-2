@@ -1,0 +1,217 @@
+import { createContext, useEffect, useReducer, useState } from 'react';
+import PropTypes from 'prop-types';
+import Amplify, { API, Auth, graphqlOperation } from 'aws-amplify';
+import { amplifyConfig } from '../config';
+import { getUser } from '../graphql/queries';
+
+Amplify.configure(amplifyConfig);
+
+const initialState = {
+  isAuthenticated: false,
+  isInitialized: false,
+  user: null
+};
+
+const handlers = {
+  INITIALIZE: (state, action) => {
+    const { isAuthenticated, user } = action.payload;
+
+    return {
+      ...state,
+      isAuthenticated,
+      isInitialized: true,
+      user
+    };
+  },
+  LOGIN: (state, action) => {
+    const { user } = action.payload;
+
+    return {
+      ...state,
+      isAuthenticated: true,
+      user
+    };
+  },
+  LOGOUT: (state) => ({
+    ...state,
+    isAuthenticated: false,
+    user: null
+  }),
+  REGISTER: (state) => ({ ...state }),
+  VERIFY_CODE: (state) => ({ ...state }),
+  RESEND_CODE: (state) => ({ ...state }),
+  PASSWORD_RECOVERY: (state) => ({ ...state }),
+  PASSWORD_RESET: (state) => ({ ...state })
+};
+
+const reducer = (state, action) => (handlers[action.type]
+  ? handlers[action.type](state, action)
+  : state);
+
+const AuthContext = createContext({
+  ...initialState,
+  platform: 'Amplify',
+  login: () => Promise.resolve(),
+  logout: () => Promise.resolve(),
+  register: () => Promise.resolve(),
+  verifyCode: () => Promise.resolve(),
+  resendCode: () => Promise.resolve(),
+  passwordRecovery: () => Promise.resolve(),
+  passwordReset: () => Promise.resolve()
+});
+
+export const AuthProvider = (props) => {
+  const { children } = props;
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const [userInfo, setUserInfo] = useState([]);
+
+  const getUserInfo = async () => {
+    try {
+      // eslint-disable-next-line
+      const userData = await API.graphql(graphqlOperation(getUser, { id: user.id }));
+      const userList = userData.data.getUser;
+      setUserInfo(userList);
+      console.log('list', userList);
+    } catch (error) {
+      console.log('error on fetching videos', error);
+    }
+  };
+
+  useEffect(() => {
+    getUserInfo();
+  }, []);
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        const { user } = await Auth.currentAuthenticatedUser();
+        getUserInfo();
+        console.log('user initialized context', userInfo);
+
+        // Here you should extract the complete user profile to make it
+        // available in your entire app.
+        // The auth state only provides basic information.
+
+        dispatch({
+          type: 'INITIALIZE',
+          payload: {
+            isAuthenticated: true,
+            user: {
+              id: user.attributes.sub,
+              avatar: '/static/mock-images/avatars/avatar-jane_rotanson.png',
+              email: user.attributes.email,
+              firstName: user.attributes.firstName,
+              lastName: user.attributes.lastName,
+              displayName: user.attributes.displayName,
+              plan: userInfo.role
+            }
+          }
+        });
+      } catch (error) {
+        dispatch({
+          type: 'INITIALIZE',
+          payload: {
+            isAuthenticated: false,
+            user: null
+          }
+        });
+      }
+    };
+
+    initialize();
+  }, []);
+
+  const login = async (email, password) => {
+    const user = await Auth.signIn(email, password);
+
+    if (user.challengeName) {
+      console.error(`Unable to login, because challenge "${user.challengeName}" is mandated and we did not handle this case.`);
+      return;
+    }
+
+    dispatch({
+      type: 'LOGIN',
+      payload: {
+        user: {
+          id: user.attributes.sub,
+          avatar: '/static/mock-images/avatars/avatar-jane_rotanson.png',
+          email: user.attributes.email,
+          firstName: user.attributes.firstName,
+          lastName: user.attributes.lastName,
+          displayName: user.attributes.displayName,
+          plan: userInfo.role
+        }
+      }
+    });
+  };
+
+  const logout = async () => {
+    await Auth.signOut();
+    dispatch({
+      type: 'LOGOUT'
+    });
+  };
+
+  const register = async (username, email, password) => {
+    await Auth.signUp({
+      username,
+      password,
+      attributes: { email }
+    });
+    dispatch({
+      type: 'REGISTER'
+    });
+  };
+
+  const verifyCode = async (username, code) => {
+    await Auth.confirmSignUp(username, code);
+    dispatch({
+      type: 'VERIFY_CODE'
+    });
+  };
+
+  const resendCode = async (username) => {
+    await Auth.resendSignUp(username);
+    dispatch({
+      type: 'RESEND_CODE'
+    });
+  };
+
+  const passwordRecovery = async (username) => {
+    await Auth.forgotPassword(username);
+    dispatch({
+      type: 'PASSWORD_RECOVERY'
+    });
+  };
+
+  const passwordReset = async (username, code, newPassword) => {
+    await Auth.forgotPasswordSubmit(username, code, newPassword);
+    dispatch({
+      type: 'PASSWORD_RESET'
+    });
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        ...state,
+        platform: 'Amplify',
+        login,
+        logout,
+        register,
+        verifyCode,
+        resendCode,
+        passwordRecovery,
+        passwordReset
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired
+};
+
+export default AuthContext;

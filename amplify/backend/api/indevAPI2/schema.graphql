@@ -1,0 +1,110 @@
+# type Task
+#   @model
+#   @auth(
+#     rules: [
+#       { allow: groups, groups: ["Managers"], queries: null, mutations: [create, update, delete] }
+#       { allow: groups, groups: ["Employees"], queries: [get, list], mutations: null }
+#     ]
+#   ) {
+#   id: ID!
+#   title: String!
+#   description: String
+#   status: String
+# }
+# type PrivateNote @model @auth(rules: [{ allow: owner }]) {
+#   id: ID!
+#   content: String!
+# }
+
+# STANDARD TABLES
+type Channel
+@model
+@auth(
+  rules: [
+    # allow admins to create, update, and delete channels
+    { allow: groups, groups: ["devs"] operations: [create, update, read] }
+    # allow authenticated users to view channels
+    { allow: private, operations: [read] }
+    # alow guest users to view channels without logging in
+    { allow: public, operations: [read], provider: iam }
+  ]
+) {
+  id: ID!
+  name: String!
+  manager: User @connection
+  supporters: [String]
+  description: String
+  category: String
+  operator: String 
+  target: Int
+  projects: [Project] @connection(name: "ProjectsToChannel")
+  featuredImg: String
+}
+
+type User @model
+  # @auth(rules: [
+  #   {allow: groups, groups: ["Admin"] },
+  #   {allow: owner, ownerField: "username", operations: [read] }
+  # ])
+{
+  id: ID!
+  firstName: String
+  lastName: String
+  username: String
+  displayName: String
+  canHire: Boolean
+  email: String
+  supporting: [Channel]
+  developing: [Project]
+  channel: Channel @connection
+  role: String
+  membership: String
+  avatar: String
+}
+
+type Project @model {
+  id: ID!
+  name: String!
+  channel: Channel @connection(name: "ProjectsToChannel")
+  channelID: String!
+  manager: User @connection
+  developers: [User]
+  description: String
+  category: String
+  featuredImg: String
+  startDate: String
+  endDate: String
+  devStage: String
+  showcase: Showcase @connection
+  updates: [Update] @connection(name: "ProjectUpdate")
+}
+
+type Update
+  @model
+  @key(name: "byProject", fields: ["projectID"], queryField: "UpdatesByProject") {
+  id: ID!
+  project: Project @connection(name: "ProjectUpdate")
+  projectID: String!
+  author: User @connection
+  name: String!
+  short: String
+  content: String
+  format: [String]
+  coverImg: String
+  index: Int
+}
+
+type Showcase @model {
+  id: ID!
+  title: String
+  manager: String
+  managerID: String
+  videos: AWSJSON
+}
+
+# DATA TYPES
+type S3Object {
+  bucket: String!
+  key: String!
+  region: String!
+}

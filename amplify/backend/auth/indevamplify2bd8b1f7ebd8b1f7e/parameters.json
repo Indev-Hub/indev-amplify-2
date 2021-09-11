@@ -1,0 +1,78 @@
+{
+    "identityPoolName": "indevamplify2bd8b1f7e_identitypool_bd8b1f7e",
+    "allowUnauthenticatedIdentities": true,
+    "resourceNameTruncated": "indevabd8b1f7e",
+    "userPoolName": "indevamplify2bd8b1f7e_userpool_bd8b1f7e",
+    "autoVerifiedAttributes": [
+        "email"
+    ],
+    "mfaConfiguration": "OFF",
+    "mfaTypes": [
+        "SMS Text Message"
+    ],
+    "smsAuthenticationMessage": "Your authentication code is {####}",
+    "smsVerificationMessage": "Your verification code is {####}",
+    "emailVerificationSubject": "Your Indev Verification Code",
+    "emailVerificationMessage": "Your verification code is {####}",
+    "defaultPasswordPolicy": true,
+    "passwordPolicyMinLength": "10",
+    "passwordPolicyCharacters": [],
+    "requiredAttributes": [
+        "email"
+    ],
+    "userpoolClientGenerateSecret": false,
+    "userpoolClientRefreshTokenValidity": 30,
+    "userpoolClientWriteAttributes": [
+        "email"
+    ],
+    "userpoolClientReadAttributes": [
+        "email"
+    ],
+    "userpoolClientLambdaRole": "indevabd8b1f7e_userpoolclient_lambda_role",
+    "userpoolClientSetAttributes": false,
+    "sharedId": "bd8b1f7e",
+    "resourceName": "indevamplify2bd8b1f7ebd8b1f7e",
+    "authSelections": "identityPoolAndUserPool",
+    "authRoleArn": {
+        "Fn::GetAtt": [
+            "AuthRole",
+            "Arn"
+        ]
+    },
+    "unauthRoleArn": {
+        "Fn::GetAtt": [
+            "UnauthRole",
+            "Arn"
+        ]
+    },
+    "useDefault": "manual",
+    "thirdPartyAuth": false,
+    "userPoolGroups": true,
+    "adminQueries": true,
+    "triggers": "{\n  \"PostConfirmation\": [\n    \"custom\"\n  ]\n}",
+    "hostedUI": false,
+    "userPoolGroupList": [
+        "admin",
+        "devs"
+    ],
+    "adminQueryGroup": "admin",
+    "serviceName": "Cognito",
+    "usernameCaseSensitive": false,
+    "parentStack": {
+        "Ref": "AWS::StackId"
+    },
+    "authTriggerConnections": "[\n  {\n    \"triggerType\": \"PostConfirmation\",\n    \"lambdaFunctionName\": \"indevamplify2bd8b1f7ebd8b1f7ePostConfirmation\"\n  }\n]",
+    "breakCircularDependency": true,
+    "permissions": [],
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "indevamplify2bd8b1f7ebd8b1f7ePostConfirmation",
+            "triggerProvider": "Cognito",
+            "attributes": [
+                "Arn",
+                "Name"
+            ]
+        }
+    ]
+}

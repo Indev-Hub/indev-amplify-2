@@ -1,0 +1,23 @@
+{
+  "files.exclude": {
+    "amplify/.config": true,
+    "amplify/**/*-parameters.json": true,
+    "amplify/**/amplify.state": true,
+    "amplify/**/transform.conf.json": true,
+    "amplify/#current-cloud-backend": true,
+    "amplify/backend/amplify-meta.json": true,
+    "amplify/backend/awscloudformation": true
+  },
+  "files.eol": "\n",
+  "workbench.colorCustomizations": {
+    "tab.activeBorder": "#EC008C",
+    "tab.activeBackground": "#0f475e",
+    "tab.unfocusedActiveBorder": "#fff",
+    "editorIndentGuide.activeBackground": "#AAEE77",
+    "editorIndentGuide.background": "#e6a8e677",
+    "titleBar.activeBackground": "#EC008C",
+    "titleBar.activeForeground": "#fff",
+    "activityBar.background": "#EC008C",
+    "activityBar.foreground": "#000"
+  }
+}
